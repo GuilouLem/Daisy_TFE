@@ -1,0 +1,158 @@
+ 
+  (directory "C:/Users/Guillaume/Desktop/TFE/Code")
+  (path &old "C:/Program Files/Daisy 7.1.0/sample" "C:/Program Files/Daisy 7.1.0/lib" "C:/Users/Guillaume/Desktop/TFE/daisy-7.1.0" "C:/Users/Guillaume/Desktop/TFE/Code")
+  (input file "tillage.dai")
+  (input file "crop.dai")
+  (input file "fertilizer.dai")
+  (input file "log.dai")
+  (input file "run_current_Crop_LTO_bioinc.dai")
+  (weather default "lonzee_daily_G.dwf")
+  (description "Rotation conventionnelle; Soil: Silt loam; Weather: Lonzee")
+  (defaction management_lonzee activity 
+    (wait_mm_dd 10 29)
+    (plowing 
+      (middle -15.0)
+      (depth -30.0) )
+    (seed_bed_preparation)
+    (sow "Wheat 2017" 
+      (seed 120 [kg w.w./ha]))
+    (wait_mm_dd 3 16)
+    (fertilize 
+      (Liquid_N 
+        (weight 68.25 [kg N/ha])))
+    (wait_mm_dd 4 12)
+    (fertilize 
+      (Liquid_N 
+        (weight 39.0 [kg N/ha])))
+    (wait_mm_dd 5 12)
+    (fertilize 
+      (Liquid_N 
+        (weight 68.25 [kg N/ha])))
+    (wait_mm_dd 7 30)
+    (harvest "Wheat 2017" 
+      (stub 8.0 [cm]))
+    (wait_mm_dd 09 07)
+    (stubble_cultivation)
+    (sow "Mustard")
+    (wait_mm_dd 12 07)
+    (harvest "Mustard" 
+      (stub 45 [cm])
+      (stem 0.0 [])
+      (leaf 0.0 []) )
+    (plowing 
+      (middle -15.0)
+      (depth -30.0) )
+    (wait_mm_dd 04 23)
+    (sow "Potato Lonzee" (seed 1.85 [t/ha]))
+    (wait_mm_dd 05 10)
+    (fertilize 
+      (Liquid_N 
+        (weight 78 [kg N/ha])))
+    (wait_mm_dd 09 11)
+    (harvest "Potato Lonzee")
+    (wait_mm_dd 09 21)
+    (stubble_cultivation)
+    (wait_mm_dd 10 10)
+    (seed_bed_preparation)
+    (sow "Wheat 2019" 
+      (seed 100 [kg w.w./ha]))
+    (wait_mm_dd 03 25)
+    (fertilize 
+      (Liquid_N 
+        (weight 58.5 [kg N/ha])))
+    (wait_mm_dd 04 17)
+    (fertilize 
+      (Liquid_N 
+        (weight 39 [kg N/ha])))
+    (wait_mm_dd 05 20)
+    (fertilize 
+      (NH4NO3 
+        (weight 81 [kg N/ha])))
+    (wait_mm_dd 08 01)
+    (harvest "Wheat 2019" 
+      (stub 8.0 [cm]))
+    (wait_mm_dd 08 07)
+    (stubble_cultivation)
+    (wait_mm_dd 08 09)
+    (progn 
+      (sow "Oat")
+      (sow "Faba Bean") )
+    (wait_mm_dd 12 03)
+    (progn 
+      (harvest "Oat" 
+        (stub 0 [cm])
+        (stem 0.0 [])
+        (leaf 0.0 []) )
+      (harvest "Faba Bean" 
+        (stub 0 [cm])
+        (stem 0.0 [])
+        (leaf 0.0 []) ) )
+    (wait_mm_dd 12 04)
+    (plowing 
+      (middle -15.0)
+      (depth -30.0) )
+    (wait_mm_dd 03 30)
+    (fertilize 
+      (Liquid_N 
+        (weight 156 [kg N/ha])))
+    (wait_mm_dd 04 01)
+    (seed_bed_preparation)
+    (sow "Beet Lonzee")
+    (wait_mm_dd 11 13)
+    (harvest "Beet Lonzee"   
+        (stub 0 [cm])
+        (stem 0.0 [])
+        (leaf 0.0 []) ) 
+    (wait_mm_dd 11 14)
+    (plowing 
+      (middle -15.0)
+      (depth -30.0)))
+  (column "LTO_Silt_Loam")
+  (time 2016 10 28)
+  (manager activity management_lonzee 
+    (wait_mm_dd 11 15) stop)
+  (deflog "Flux" column 
+    (declare T_unit String "Temperature unit.")
+    (T_unit "dg C")
+    (declare E_unit String "Water flux.")
+    (E_unit "mm/h")
+    (declare R_unit String "Radiation.")
+    (R_unit "W/m^2")
+    (where "flux.dlf")
+    (when hourly)
+    (entries 
+      (number 
+
+        (path column "${column}" Vegetation crops crops "*" Prod NetPhotosynthesis)
+        (dimension "umol/m^2/s")
+        (handle sum)
+        (factor 6.3131) );g CO2/m^2/h -> umol/m^2/s
+     (interval (path column "${column}" OrganicMatter "*" CO2)
+                     (tag "OM_CO2")
+                     (dimension "umolCO2/m^2/s")
+                     (factor 231481.481) ;;g CO2-C/cm^2 -> umolCO2/m^2/s
+                     (handle sum))
+     (interval (path column "${column}" OrganicMatter "*" abiotic_factor)
+                     (tag "F_abiotic") ) ) )
+  (output harvest 
+   ("Flux" 
+     (when hourly)
+     (where "results/bioinc/flux_hourly_0.9_-100.0.dlf") )
+   ("Flux"
+     (when daily) 
+     (where "results/bioinc/flux_daily_0.9_-100.0.dlf") )
+   ("Carbon Balance" 
+     (when daily)
+     (where "results/bioinc/bio0_30_0.9_-100.0.dlf")
+     (from 0 [m])
+     (to -0.30 [m]) )
+   ("Carbon Balance" 
+     (when daily)
+     (where "results/bioinc/bio30_60_0.9_-100.0.dlf")
+     (from -0.30 [m])
+     (to -0.60 [m]) )
+   ("Carbon Balance" 
+     (when daily)
+     (where "results/bioinc/bio60_90_0.9_-100.0.dlf")
+     (from -0.60 [m])
+     (to -0.90 [m]) ) )

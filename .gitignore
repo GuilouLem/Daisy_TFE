@@ -1,0 +1,11 @@
+# Dossiers de résultats Daisy
+results/
+*.dlf
+*.log
+
+# Dossier PyDaisy si tu ne veux pas le suivre
+PyDaisy/
+
+# Fichiers temporaires
+*.tmp
+*.bak
