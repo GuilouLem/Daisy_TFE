@@ -19,7 +19,7 @@ list_dlf = [f.name for f in path_src.glob("*.dlf")]
 
 
 interest_var = [
-                "Soil_C", "SOM_C", "SMB_C", "AOM_C", 
+                "Soil_C", "SOM_C", "SMB_C", "AOM_C", "SOIL_C", "TOP_C", "REMOVED_C", 
                 "NetPhotosynthesis", "OM_CO2", "NEE Daisy", 
                 "DS", "DM tot","DM épis", "DM Organe", "DM oat", "DM faba"
                 ]
@@ -68,7 +68,7 @@ if os.path.exists(os.path.join(path_src, "faba.dlf")):
 if "crop_prod.dlf" in list_dlf:
     list_dlf.remove("crop_prod.dlf")
 #%% Test pour une seule variable 
-a = list_dlf[11] 
+a = list_dlf[1] 
 b = dlf(a, path_src, interest_var)
 
 b.process()
@@ -89,7 +89,7 @@ b = dlf(a, path_src, interest_var)
 
 b.process_comp()
 
-b.plot_graph_ICOS_periods(subplot=False)
+b.plot_graph_ICOS_periods()
 
 
 #%% Test pour la lecture et comparaison ICOS 

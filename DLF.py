@@ -85,6 +85,7 @@ class dlf:
                 self.faba = False
                 self.oat = False
             self.soil = any(word in self.name for word in ["trad", "bio"])
+            self.bioinc = "bioincorporation" in self.name
             self.entire_year = any(word in self.name for word in ["trad", "bio", "flux"])
             
             if self.soil and "NetPhotosynthesis" in self.interest: 
@@ -111,7 +112,10 @@ class dlf:
                               "DM épis": "blue",
                               "DM Organe": "blue",
                               "DM oat": "blue",
-                              "DM faba": "cyan"
+                              "DM faba": "cyan", 
+                              "SOIL_C": "black", 
+                              "TOP_C": "green", 
+                              "REMOVED_C": "red"
                               }
             
             self.dic_label = {"Soil_C": "[t C/ha]",
@@ -127,7 +131,10 @@ class dlf:
                               "DM épis": "Biomasse [t/ha]",
                               "DM Organe": "Biomasse [t/ha]",
                               "DM oat": "Biomasse [t/ha]",
-                              "DM faba": "Biomasse [t/ha]"
+                              "DM faba": "Biomasse [t/ha]",
+                              "SOIL_C": "[t C/ha]", 
+                              "TOP_C": "[t C/ha]", 
+                              "REMOVED_C": "[t C/ha]"
                               }
             
             self.dic_prof = {}
@@ -201,12 +208,16 @@ class dlf:
                 self.df["OM_CO2"] = self.df["OM_CO2"] / 24
                 self.df["NetPhotosynthesis"] = self.df["NetPhotosynthesis"] / 24
             
-            if self.soil:
+            if self.soil and not self.bioinc:
                 self.df["Soil_C"] = self.df["Soil_C"] / 1000
                 self.df["SOM_C"] = self.df["SOM_C"] / 1000
                 self.df["SMB_C"] = self.df["SMB_C"] / 1000
                 self.df["AOM_C"] = self.df["AOM_C"] / 1000
                 self.df["Surface_C"] = self.df["Surface_C"] / 1000
+            if self.bioinc:
+                self.df["SOIL_C"] = self.df["SOIL_C"] / 1000
+                self.df["TOP_C"] = self.df["TOP_C"] / 1000
+                self.df["REMOVED_C"] = self.df["REMOVED_C"] / 1000
             
             self.df = self.df.filter(items=self.interest)
             self.var = self.df.columns[4:]
@@ -297,20 +308,24 @@ class dlf:
             dt = pd.to_datetime(dict(year=self.df["year"], month=self.df["month"], day=self.df["mday"], hour=self.df["hour"]))
 
             for v in self.var:
+                self.df[v] = self.df[v].astype(float)
                 if v in ["DM tot", "DM épis", "DM Organe"]:
                     if ax2 is None:
                         ax2 = ax1.twinx()
-                    self.df[v] = self.df[v].astype(float)
                     ax2.plot(dt, self.df[v], label=v, color=self.dic_color[v])
                     ax2.set_ylabel("Biomasse [t/ha]", color="green")
                     ax2.tick_params(axis='y', color="green")
                 elif v =="DS":
-                    self.df[v] = self.df[v].astype(float)
                     ax1.plot(dt, self.df[v], label=v, color=self.dic_color[v])
                     ax1.set_ylabel("DS [-]", color=self.dic_color[v])
                     ax1.tick_params(axis='y', colors=self.dic_color[v])
+                elif v == "REMOVED_C":
+                    if ax2 is None:
+                        ax2 = ax1.twinx()
+                    ax2.plot(dt, self.df[v], label=v, color=self.dic_color[v])
+                    ax2.set_ylabel(self.dic_label[v], color=self.dic_color[v])
+                    # ax2.tick_params(axis='y', color=self.dic_color[v])
                 else:
-                    self.df[v] = self.df[v].astype(float)
                     ax1.plot(dt, self.df[v], label=v, color=self.dic_color[v])
                     ax1.set_ylabel(self.dic_label[v])
                                 
@@ -347,18 +362,16 @@ class dlf:
 
             
             for v in self.var:
+                self.df[v] = self.df[v].astype(float)
                 if v in ["DM tot", "DM épis", "DM Organe"] and not self.faba_oat:
                     if ax2 is None:
                         ax2 = ax1.twinx()
-                    self.df[v] = self.df[v].astype(float)
                     ax2.plot(dt, self.df[v], label=v, color=self.dic_color[v])
                 elif v =="DS":
-                    self.df[v] = self.df[v].astype(float)
                     ax1.plot(dt, self.df[v], label=v, color=self.dic_color[v])
                     ax1.set_ylabel("DS [-]", color=self.dic_color[v])
                     ax1.tick_params(axis='y', colors=self.dic_color[v])
                 else:
-                    self.df[v] = self.df[v].astype(float)
                     ax1.plot(dt, self.df[v], label=v, color=self.dic_color[v]) 
                     ax1.set_ylabel(self.dic_label[v])
 

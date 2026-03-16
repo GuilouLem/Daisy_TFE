@@ -198,7 +198,9 @@
      (where "results/trad/flux_hourly.dlf") )
    ("Flux"
      (when daily)  
-     (where "results/trad/flux_daily.dlf")  ) ) 
+     (where "results/trad/flux_daily.dlf")  ) 
+   ("Bioincorporation"
+     (where "results/trad/bioincorporation.dlf") )) 
   ;  ("Soil Temperature" 
   ;    (when daily)
   ;    (where "results/trad/soil_temp.dlf") ) 
