@@ -697,8 +697,8 @@
             (16. 1.00)
             (30.0 1.00) ) )
         (LeafPhot original 
-          (Fm 7 [g CO2/m^2/h])
-          (Qeff 0.077)
+          (Fm @Fm_mustard@ [g CO2/m^2/h])
+          (Qeff @Qeff_mustard@)
           ;(Fm 7.0)
           ;(Qeff 0.200)
           (TempEff 
@@ -791,8 +791,8 @@
             (1.15 0.00)
             (1.4 0.00) ) )
         (LeafPhot original 
-          (Fm 3 [g CO2/m^2/h])
-          (Qeff 0.045) )
+          (Fm @Fm_potato@ [g CO2/m^2/h])
+          (Qeff @Qeff_potato@) )
           ;(Fm 3 [g CO2/m^2/h])
           ;(Qeff 0.035) )
         (Prod 
@@ -868,8 +868,8 @@
             (1.00 120)
             (2.00 150) ))
         (LeafPhot original 
-          (Fm 3.5 [g CO2/m^2/h])
-          (Qeff 0.04)
+          (Fm @Fm_oat@ [g CO2/m^2/h])
+          (Qeff @Qeff_oat@)
           ;(Fm 3.20)
           ;(Qeff 0.04)
           (TempEff 
@@ -907,8 +907,8 @@
             (16.0 1.0)
             (30.0 1.0) ) )
         (LeafPhot original
-          (Fm 4 [g CO2/m^2/h])
-          ( Qeff 0.04) ) 
+          (Fm @Fm_faba@ [g CO2/m^2/h])
+          ( Qeff @Qeff_faba@) ) 
           ;(Fm 2.30)
           ;(Qeff 0.0400) )
        (Root
@@ -960,8 +960,8 @@
             (30. 1.00) ))
         ;  (defined_until_ds 0.8) )
         (LeafPhot original 
-          (Fm 7 [g CO2/m^2/h])
-          (Qeff 0.056)
+          (Fm @Fm_beet@ [g CO2/m^2/h])
+          (Qeff @Qeff_beet@)
           ;(Fm 4)
           ;(Qeff 0.075)
           (DSEff 

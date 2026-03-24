@@ -697,8 +697,8 @@
             (16. 1.00)
             (30.0 1.00) ) )
         (LeafPhot original 
-          (Fm 7 [g CO2/m^2/h])
-          (Qeff 0.077)
+          (Fm 7.76 [g CO2/m^2/h])
+          (Qeff 0.075)
           ;(Fm 7.0)
           ;(Qeff 0.200)
           (TempEff 
@@ -791,8 +791,8 @@
             (1.15 0.00)
             (1.4 0.00) ) )
         (LeafPhot original 
-          (Fm 3 [g CO2/m^2/h])
-          (Qeff 0.045) )
+          (Fm 4.88 [g CO2/m^2/h])
+          (Qeff 0.031) )
           ;(Fm 3 [g CO2/m^2/h])
           ;(Qeff 0.035) )
         (Prod 
@@ -868,8 +868,8 @@
             (1.00 120)
             (2.00 150) ))
         (LeafPhot original 
-          (Fm 3.5 [g CO2/m^2/h])
-          (Qeff 0.04)
+          (Fm 2.1119407268489576 [g CO2/m^2/h])
+          (Qeff 0.06764368456627792)
           ;(Fm 3.20)
           ;(Qeff 0.04)
           (TempEff 
@@ -907,8 +907,8 @@
             (16.0 1.0)
             (30.0 1.0) ) )
         (LeafPhot original
-          (Fm 4 [g CO2/m^2/h])
-          ( Qeff 0.04) ) 
+          (Fm 5.047182497604917 [g CO2/m^2/h])
+          ( Qeff 0.06591210525508098) ) 
           ;(Fm 2.30)
           ;(Qeff 0.0400) )
        (Root
