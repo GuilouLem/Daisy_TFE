@@ -24,7 +24,7 @@ fpath = Path().resolve()
 path_dai = os.path.join(fpath, "lonzee_calib.dai")
 path_crop = os.path.join(fpath, "CROP_LTO_calib.dai")
 path_results = path_crop.replace(r"Calib\CROP_LTO_calib.dai", r"results\calib")
-
+path_crop_icos = path_crop.replace(r"Code\Calib\CROP_LTO_calib.dai", r"BE_LON\BE-LON_vegetation data.xlsx")
 
 # subprocess.run([r"C:\Program Files\daisy 7.1.0\bin\daisy.exe", path_dai])
 
@@ -63,6 +63,12 @@ NEE_data.set_index('Date Time', inplace=True)
 template = open(path_crop).read()
 template_dai = open(path_dai).read()
 
+
+crop = pd.read_excel(path_crop_icos)
+crop = crop[["Date", "Crop species", "Total_dry_biomass_avg (t/ha)"]]
+crop["Date"] = pd.to_datetime(crop["Date"])
+crop.set_index("Date", inplace=True)
+crop = crop.loc[periods["wheat17"][0]:periods["beet"][1]]
 
 # # Fm_mustard = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 # Qeff_mustard = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08]
@@ -107,7 +113,7 @@ template_dai = open(path_dai).read()
 #     fig.show()
         
     
-def calib(params):
+def calib_icos(params):
     uid = uuid.uuid4().hex
     run_dir = os.path.join(fpath, f"run_{uid}")
     os.makedirs(run_dir, exist_ok=True)
@@ -164,27 +170,107 @@ def calib(params):
     
     return RMSE
 
-Fm_mustard = 7.76
-Qeff_mustard = 0.075
-Fm_potato = 4.88
-Qeff_potato = 0.031
-Fm_faba = 2.18
-Qeff_faba = 0.03
-Fm_oat = 2.36
-Qeff_oat = 0.033
-Fm_beet = 4.63
-Qeff_beet = 0.077
+
+test = 0
+    
+def calib_DM(params):
+    uid = uuid.uuid4().hex
+    run_dir = os.path.join(fpath, f"run_{uid}")
+    os.makedirs(run_dir, exist_ok=True)
+    crop_file = os.path.join(run_dir, f"CROP_{uid}.dai")
+    dai_file = os.path.join(run_dir, f"dai_{uid}.dai")
+    
+    Fm_beet, Qeff_beet = params
+    x = "Sugar beet"
+    
+    crop_opti = template
+    crop_opti = crop_opti.replace("@Fm_beet@", str(Fm_beet))
+    crop_opti = crop_opti.replace("@Qeff_beet@", str(Qeff_beet))
+    crop_opti = crop_opti.replace("@Fm_faba@", str(Fm_faba))
+    crop_opti = crop_opti.replace("@Qeff_faba@", str(Qeff_faba))
+    crop_opti = crop_opti.replace("@Fm_oat@", str(Fm_oat))
+    crop_opti = crop_opti.replace("@Qeff_oat@", str(Qeff_oat))
+    crop_opti = crop_opti.replace("@Fm_potato@", str(Fm_potato))
+    crop_opti = crop_opti.replace("@Qeff_potato@", str(Qeff_potato))
+    crop_opti = crop_opti.replace("@Fm_mustard@", str(Fm_mustard))
+    crop_opti = crop_opti.replace("@Qeff_mustard@", str(Qeff_mustard))
+    
+    dai_opti = template_dai
+    dai_opti = dai_opti.replace("@flux_hourly@", f"C:/Users/Guillaume/Desktop/TFE/Code/Calib/run_{uid}/flux_hourly.dlf")
+    dai_opti = dai_opti.replace("@crop_production@", f"C:/Users/Guillaume/Desktop/TFE/Code/Calib/run_{uid}/crop_production.dlf")
+    dai_opti = dai_opti.replace("@crop_opti@", f"CROP_{uid}.dai")
+    dai_opti = dai_opti.replace("@directory@", f"C:/Users/Guillaume/Desktop/TFE/Code/Calib/run_{uid}")
+    
+    with open(crop_file, "w") as f:
+        f.write(crop_opti)
+    
+    with open(dai_file, "w") as f:
+        f.write(dai_opti)
+        
+    subprocess.run(
+        [r"C:\Program Files\daisy 7.1.0\bin\daisy.exe", dai_file],
+        cwd=run_dir,
+        stdout=subprocess.DEVNULL, 
+        stderr=subprocess.DEVNULL
+    )
+    
+    crop_data = crop[(crop["Crop species"]==x)]
+    crop_data = crop_data.dropna(subset=["Total_dry_biomass_avg (t/ha)"])
+    
+    crop_model = dlf("crop_production.dlf", run_dir, ["DM tot","DM épis", "DM Organe", "DM oat", "DM faba"])
+    crop_model.open_dlf()
+    
+    crop_model = crop_model.df
+    crop_model = crop_model[["dt", "DM tot"]]
+    crop_model["dt"] = pd.to_datetime(crop_model["dt"])
+    crop_model.set_index("dt", inplace=True)
+    crop_model = crop_model[crop_model.index.isin(crop_data.index)]
+    
+    # print(crop_model)
+    # print(crop_data)
+    # if len(crop_model) != len(crop_data["Total_dry_biomass_avg (t/ha)"]):
+    #     test = crop_model
+        
+    RMSE_DM = np.sqrt(mean_squared_error(crop_data["Total_dry_biomass_avg (t/ha)"], crop_model))
+    
+    shutil.rmtree(run_dir)
+    
+    return RMSE_DM
+
+'Result of calib_NEE'
+# Fm_mustard = 7.76
+# Qeff_mustard = 0.075
+# Fm_potato = 4.88
+# Qeff_potato = 0.031
+# Fm_faba = 2.18
+# Qeff_faba = 0.03
+# Fm_oat = 2.36
+# Qeff_oat = 0.033
+# Fm_beet = 4.63
+# Qeff_beet = 0.077
+
+'Result of calib DM'
+Fm_mustard = 7.66
+Qeff_mustard = 0.08
+Fm_potato = 6.25
+Qeff_potato = 0.055
+Fm_faba = 2.47
+Qeff_faba = 0.032
+Fm_oat = 3.42
+Qeff_oat = 0.032
+Fm_beet = 7.88
+Qeff_beet = 0.079
+
 
 if __name__=='__main__':
     from multiprocessing import freeze_support
     freeze_support()
 
-    opti = differential_evolution(calib, bounds=boundary, maxiter=10, popsize=5, workers=-1, 
+    opti = differential_evolution(calib_DM, bounds=boundary, maxiter=10, popsize=5, workers=-1, 
                                   updating='deferred', polish=False, disp=False)
 
     print(f"final param: {opti.x} \nfinal RMSE: {opti.fun}")
 
-#%%
 
 # Fm_mustard = opti.x[0]
 # Qeff_mustard = opti.x[1]

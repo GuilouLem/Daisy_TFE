@@ -139,5 +139,8 @@
   (output harvest 
    ("Flux" 
      (when hourly) 
-     (where "@flux_hourly@") ) )
+     (where "@flux_hourly@") ) 
+    ("Crop Production"
+     (when daily)
+     (where "@crop_production@") ) )
    

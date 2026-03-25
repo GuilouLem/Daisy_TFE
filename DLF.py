@@ -188,7 +188,6 @@ class dlf:
                     if line.strip().startswith("year"):
                         break
                     skip += 1
-
                     
             self.df = pd.read_csv(self.path, sep="\t", skiprows=skip, header=0)
             self.df = self.df.replace(",", ".", regex=True)
