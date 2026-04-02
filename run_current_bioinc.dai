@@ -137,22 +137,22 @@
   (output harvest 
    ("Flux" 
      (when hourly)
-     (where "results/bioinc/flux_hourly_0.9_-100.0.dlf") )
+     (where "results/bioinc/flux_hourly_0.1_-30.0.dlf") )
    ("Flux"
      (when daily) 
-     (where "results/bioinc/flux_daily_0.9_-100.0.dlf") )
+     (where "results/bioinc/flux_daily_0.1_-30.0.dlf") )
    ("Carbon Balance" 
      (when daily)
-     (where "results/bioinc/bio0_30_0.9_-100.0.dlf")
+     (where "results/bioinc/bio0_30_0.1_-30.0.dlf")
      (from 0 [m])
      (to -0.30 [m]) )
    ("Carbon Balance" 
      (when daily)
-     (where "results/bioinc/bio30_60_0.9_-100.0.dlf")
+     (where "results/bioinc/bio30_60_0.1_-30.0.dlf")
      (from -0.30 [m])
      (to -0.60 [m]) )
    ("Carbon Balance" 
      (when daily)
-     (where "results/bioinc/bio60_90_0.9_-100.0.dlf")
+     (where "results/bioinc/bio60_90_0.1_-30.0.dlf")
      (from -0.60 [m])
      (to -0.90 [m]) ) )

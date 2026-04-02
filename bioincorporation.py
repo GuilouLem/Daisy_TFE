@@ -168,6 +168,8 @@ plt.xlabel("Date")
 plt.show
 
 #%%
+"Comparaison"
+
 trad = dlf("trad_tot.dlf", path_trad, ["Surface_C"])
 trad.open_dlf()
 
@@ -208,6 +210,7 @@ for i, p  in enumerate(prof):
         ax2.set_ylabel("Surface_C")
     
 axs[0].set_ylabel("NEE [umol CO2/m²/s]")
+axs[0].legend()
 fig.suptitle("Flux en fonction de Rmax")
     
 
@@ -248,6 +251,7 @@ for i, r  in enumerate(Rm):
         ax2.set_ylabel("Surface_C")
     
 axs[0].set_ylabel("NEE [umol CO2/m²/s]")
+axs[0].legend()
 fig.suptitle("Flux en fonction de prof_max")
 #%%    
 

@@ -51,7 +51,7 @@ Qeff_mustard = 0.05
 
 boundary = [(2, 8), (0.03, 0.08)]
 
-data = dlf("flux_daily.dlf", path_results, ["NEE ICOS"])
+data = dlf("flux_hourly.dlf", path_results, ["NEE ICOS"])
 data.path_icos = data.path_icos.replace(r"\Calib", r"")
 data.open_ICOS()
 
@@ -59,6 +59,7 @@ NEE_data = data.icos
 NEE_data = data.icos[["Date Time", "NEE"]]
 NEE_data['Date Time'] = pd.to_datetime(NEE_data['Date Time'])
 NEE_data.set_index('Date Time', inplace=True)
+NEE_data = NEE_data.resample('h').mean()
 
 template = open(path_crop).read()
 template_dai = open(path_dai).read()
@@ -120,7 +121,8 @@ def calib_icos(params):
     crop_file = os.path.join(run_dir, f"CROP_{uid}.dai")
     dai_file = os.path.join(run_dir, f"dai_{uid}.dai")
     
-    Fm_beet, Qeff_beet = params
+    Fm_beet, Qeff_beet= params
+    x = "beet"
     
     crop_opti = template
     crop_opti = crop_opti.replace("@Fm_beet@", str(Fm_beet))
@@ -136,6 +138,7 @@ def calib_icos(params):
     
     dai_opti = template_dai
     dai_opti = dai_opti.replace("@flux_hourly@", f"C:/Users/Guillaume/Desktop/TFE/Code/Calib/run_{uid}/flux_hourly.dlf")
+    dai_opti = dai_opti.replace("@crop_production@", f"C:/Users/Guillaume/Desktop/TFE/Code/Calib/run_{uid}/crop_production.dlf")
     dai_opti = dai_opti.replace("@crop_opti@", f"CROP_{uid}.dai")
     dai_opti = dai_opti.replace("@directory@", f"C:/Users/Guillaume/Desktop/TFE/Code/Calib/run_{uid}")
     
@@ -159,16 +162,19 @@ def calib_icos(params):
     NEE_model = NEE_model[["dt", "NEE Daisy"]]
     NEE_model["dt"] = pd.to_datetime(NEE_model["dt"])
     NEE_model.set_index("dt", inplace=True)
-    NEE_model = NEE_model.resample('D').mean()
     
-    NEE_model = NEE_model[periods["beet"][0]:periods["beet"][1]]
-    NEE_data_filt = NEE_data[periods["beet"][0]:periods["beet"][1]]
+    NEE_model = NEE_model[periods[x][0]:periods[x][1]]
+    NEE_data_filt = NEE_data[periods[x][0]:periods[x][1]]
     
+    mask = NEE_data_filt["NEE"].notna()
+    NEE_model = NEE_model.loc[mask]
+    NEE_data_filt = NEE_data_filt.loc[mask]
     RMSE = np.sqrt(mean_squared_error(NEE_data_filt, NEE_model))
     
     shutil.rmtree(run_dir)
     
     return RMSE
+
 
 
 test = 0
@@ -180,8 +186,8 @@ def calib_DM(params):
     crop_file = os.path.join(run_dir, f"CROP_{uid}.dai")
     dai_file = os.path.join(run_dir, f"dai_{uid}.dai")
     
-    Fm_beet, Qeff_beet = params
-    x = "Sugar beet"
+    Fm_potato, Qeff_potato = params
+    x = "Potato"
     
     crop_opti = template
     crop_opti = crop_opti.replace("@Fm_beet@", str(Fm_beet))
@@ -238,35 +244,35 @@ def calib_DM(params):
     return RMSE_DM
 
 'Result of calib_NEE'
-# Fm_mustard = 7.76
-# Qeff_mustard = 0.075
-# Fm_potato = 4.88
-# Qeff_potato = 0.031
-# Fm_faba = 2.18
-# Qeff_faba = 0.03
-# Fm_oat = 2.36
-# Qeff_oat = 0.033
-# Fm_beet = 4.63
-# Qeff_beet = 0.077
+Fm_mustard = 2.41
+Qeff_mustard = 0.0432
+Fm_potato = 2.4
+Qeff_potato = 0.067
+Fm_faba = 2.06
+Qeff_faba = 0.0382
+Fm_oat = 2.07
+Qeff_oat = 0.0390
+Fm_beet = 2.09
+Qeff_beet = 0.0423
 
-'Result of calib DM'
-Fm_mustard = 7.66
-Qeff_mustard = 0.08
-Fm_potato = 6.25
-Qeff_potato = 0.055
-Fm_faba = 2.47
-Qeff_faba = 0.032
-Fm_oat = 3.42
-Qeff_oat = 0.032
-Fm_beet = 7.88
-Qeff_beet = 0.079
+# 'Result of calib DM'
+# Fm_mustard = 7.67
+# Qeff_mustard = 0.0348
+# Fm_potato = 7.97
+# Qeff_potato = 0.078
+# Fm_faba = 2.47
+# Qeff_faba = 0.032
+# Fm_oat = 3.42
+# Qeff_oat = 0.032
+# Fm_beet = 7.88
+# Qeff_beet = 0.079
 
 
 if __name__=='__main__':
     from multiprocessing import freeze_support
     freeze_support()
 
-    opti = differential_evolution(calib_DM, bounds=boundary, maxiter=10, popsize=5, workers=-1, 
+    opti = differential_evolution(calib_icos, bounds=boundary, maxiter=10, popsize=5, workers=-1, 
                                   updating='deferred', polish=False, disp=False)
 
     print(f"final param: {opti.x} \nfinal RMSE: {opti.fun}")

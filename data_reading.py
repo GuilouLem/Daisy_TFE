@@ -20,7 +20,8 @@ list_dlf = [f.name for f in path_src.glob("*.dlf")]
 
 interest_var = [
                 "Soil_C", "SOM_C", "SMB_C", "AOM_C", "SOIL_C", "TOP_C", "REMOVED_C", 
-                "NetPhotosynthesis", "OM_CO2", "NEE Daisy", 
+                # "NetPhotosynthesis", "OM_CO2", 
+                "NEE Daisy", 
                 "DS", "DM tot","DM épis", "DM Organe", "DM oat", "DM faba"
                 ]
 
@@ -67,32 +68,52 @@ if os.path.exists(os.path.join(path_src, "faba.dlf")):
     
 if "crop_prod.dlf" in list_dlf:
     list_dlf.remove("crop_prod.dlf")
-#%% Test pour une seule variable 
-a = list_dlf[1] 
-b = dlf(a, path_src, interest_var)
+# #%% Test pour une seule variable 
+# a = list_dlf[1] 
+# b = dlf(a, path_src, interest_var)
 
-b.process()
+# b.process()
 
 
 
-#%% Test pour lecture Daisy de tous les fichiers
+# #%% Test pour lecture Daisy de tous les fichiers
 
-for d in list_dlf:
-    print(d)
-    objet = dlf(d, path_src, interest_var)
-    objet.process()
+# for d in list_dlf:
+#     print(d)
+#     objet = dlf(d, path_src, interest_var)
+#     objet.process()
 
-#%%
-a = list_dlf[6]
-print(a)
-b = dlf(a, path_src, interest_var)
+# # #%% Test pour une culture à la fois 
+# a = list_dlf[6]
 
-b.process_comp()
+# print(a)
+# b = dlf(a, path_src, interest_var)
 
-b.plot_graph_ICOS_periods()
+# b.process_comp()
+
+# a = list_dlf[4]
+
+# print(a)
+# b = dlf(a, path_src, interest_var)
+
+# b.open_dlf()
+# b.open_ICOS()
+# b.plot_graph_ICOS()
+
+# a = list_dlf[3]
+
+# print(a)
+# b = dlf(a, path_src, interest_var)
+
+# b.open_dlf()
+# b.open_ICOS()
+# b.plot_graph_ICOS()
 
 
 #%% Test pour la lecture et comparaison ICOS 
 for d in list_dlf:
+    # if d=="flux_hourly.dlf":
     objet = dlf(d, path_src, interest_var)
     objet.process_comp()
+    if objet.flux:
+        objet.plot_graph_ICOS_periods(subplot=True)

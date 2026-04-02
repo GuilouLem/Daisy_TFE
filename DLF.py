@@ -13,6 +13,7 @@ import plotly.graph_objects as go
 from pathlib import Path
 import matplotlib.dates as mdates
 import matplotlib.ticker as mticker
+from sklearn.metrics import mean_squared_error
 
 
 LOGGER = logging.getLogger(__name__)
@@ -98,6 +99,14 @@ class dlf:
                                  "faba_oat": ["2019-08-01", "2020-04-01"], 
                                  "beet": ["2019-12-04", "2020-11-15"]                            
                                  }
+            
+            self.crop_periods = {"wheat17": ["2016-10-29", "2017-07-30"],
+                                "mustard": ["2017-09-07", "2017-12-07"],
+                                "potato": ["2018-04-23", "2018-09-11"],
+                                "wheat19": ["2018-10-10", "2019-08-01"], 
+                                "faba_oat": ["2019-08-19", "2019-12-03"], 
+                                "beet": ["2020-04-01", "2020-11-13"]                            
+                                }
             
             self.dic_color = {"Soil_C": "Black",
                               "SOM_C": "green",
@@ -194,10 +203,12 @@ class dlf:
             self.df = self.df.apply(lambda col: pd.to_numeric(col, errors="coerce"))
             
             if self.crop or self.wheat17 or self.mustard or self.potato or self.wheat19 or self.faba or self.oat or self.beet:
+                if self.potato:
+                    self.df["WSOrg"] = self.df["WSOrg"] + 1.85
                 self.df["DM tot"] = self.df["WLeaf"] + self.df["WStem"] + self.df["WSOrg"]
                 if self.wheat17 or self.wheat19:
                     self.df["DM épis"] = self.df["WSOrg"]
-                elif not self.faba or not self.oat:
+                elif not self.faba and not self.oat and not self.mustard:
                     self.df["DM Organe"] = self.df["WSOrg"]
 
             if self.flux:
@@ -256,6 +267,10 @@ class dlf:
                 self.icos = pd.concat([df1, df2])
                 self.icos["NEE"] = self.icos["NEE"].astype(float)
                 self.icos["NEE"] = self.icos["NEE"].replace(-9999, np.nan)
+                self.icos["Tair"] = self.icos["Tair"].astype(float)
+                self.icos["Tair"] = self.icos["Tair"].replace(-9999, np.nan)
+                self.icos["Tsoil"] = self.icos["Tsoil"].astype(float)
+                self.icos["Tsoil"] = self.icos["Tsoil"].replace(-9999, np.nan)
                 
                 form = "%Y-%-m-%d %H:%M:%S"
                 date = "Date Time"
@@ -273,8 +288,8 @@ class dlf:
                                 
                 if self.daily:
                     self.icos[date] = pd.to_datetime(self.icos[date], format=form)
-                    self.icos = self.icos.groupby(self.icos[date].dt.date)["NEE"].mean()
-                    self.icos = self.icos.to_frame()
+                    self.icos = self.icos.groupby(self.icos[date].dt.date)[["NEE", "Tair", "Tsoil"]].mean()
+                    # self.icos = self.icos.to_frame()
                     self.icos = self.icos.reset_index()
                     self.icos["NEE"] = self.icos["NEE"].interpolate(method='linear')
                     
@@ -349,7 +364,7 @@ class dlf:
             return
         
         
-    def plot_graph_ICOS(self):
+    def plot_graph_ICOS(self, Temp=False):
         
         try:
 
@@ -376,6 +391,22 @@ class dlf:
 
             if self.flux:
                 ax1.plot(self.datetime, self.icos["NEE"], label="NEE ICOS")
+                
+                if Temp:
+                    ax2 = ax1.twinx()
+                    ax2.plot(self.datetime, self.icos["Tair"], label="Tair", color="black")
+                    ax2.plot(self.datetime, self.icos["Tsoil"], label="Tsoil", color="brown")
+                    
+                    # Axe 1
+                    y1 = ax1.get_ylim()
+                    max1 = max(abs(y1[0]), abs(y1[1]))
+                    ax1.set_ylim(-max1, max1)
+                    
+                    # Axe 2
+                    y2 = ax2.get_ylim()
+                    max2 = max(abs(y2[0]), abs(y2[1]))
+                    ax2.set_ylim(-max2, max2)
+                    
         
             if self.crop or self.wheat17 or self.mustard or self.potato or self.wheat19 or self.beet:
                 ax2.errorbar(self.datetime, self.icos["Total_dry_biomass_avg (t/ha)"], yerr=self.icos["Total_dry_biomass_std (t/ha)"], color="green", fmt="o", capsize=3, label="DM tot (ICOS)")
@@ -386,7 +417,7 @@ class dlf:
                 ax2.tick_params(axis='y', colors="green")
                 
                 if self.beet or self.potato:
-                    ax2.errorbar(self.datetime, self.icos["Total_dry_BGB_avg (t/ha)"], yerr=self.icos["Total_dry_BGB_std (t/ha)"], color="blue", fmt="o", capsize=3, label="DM épis (ICOS)")
+                    ax2.errorbar(self.datetime, self.icos["Total_dry_BGB_avg (t/ha)"], yerr=self.icos["Total_dry_BGB_std (t/ha)"], color="blue", fmt="o", capsize=3, label="DM Organe (ICOS)")
                 ax2.set_ylabel("Biomasse [t/ha]", color="green")
                 ax2.tick_params(axis='y', colors="green")
                 
@@ -395,7 +426,7 @@ class dlf:
                 ax1.set_ylabel("Biomasse [t/ha]", color="green")
                 ax1.tick_params(axis='y', colors="green")
                 
-            ax1.xaxis.set_major_locator(mticker.MaxNLocator(nbins=6)) 
+            # ax1.xaxis.set_major_locator(mdates.MonthLocator(bymonthday=1))
             ax1.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
             
             if self.entire_year:
@@ -441,18 +472,37 @@ class dlf:
                     
                     daisy = self.df[(self.df["dt"]>=start) & (self.df["dt"]<=end)]
                     ICOS = self.icos[(self.icos["Date Time"]>=start) & (self.icos["Date Time"]<=end)]
+                    ICOS = ICOS.set_index("Date Time")
+                    ICOS = ICOS["NEE"]
                     datetime = self.datetime[(self.datetime>=start) & (self.datetime<=end)]
                     
+                    if not self.daily:
+                        ICOS = ICOS.resample('h').mean()
                     
                     axs[i][j].plot(daisy["dt"], daisy["NEE Daisy"], color=self.dic_color["NEE Daisy"], label="NEE Daisy" if i==0 and j==0 else None)
-                    axs[i][j].plot(datetime, ICOS["NEE"], color=self.dic_color["NEE ICOS"], label="NEE ICOS" if i==0 and j==0 else None)
+                    axs[i][j].plot(ICOS.index, ICOS, color=self.dic_color["NEE ICOS"], label="NEE ICOS" if i==0 and j==0 else None)
+                    
+                    start = pd.to_datetime(self.crop_periods[p][0])
+                    end = pd.to_datetime(self.crop_periods[p][1])
+                    daisy = daisy[(daisy["dt"]>=start) & (daisy["dt"]<=end)]
+                    ICOS = ICOS[(ICOS.index>=start) & (ICOS.index<=end)]
+                    
+                    if not self.daily:
+                        mask = ICOS.notna()
+                        daisy = daisy.set_index("dt")
+                        daisy = daisy.loc[mask]
+                        ICOS = ICOS[mask]
+                    
+                    RMSE = np.sqrt(mean_squared_error(ICOS, daisy["NEE Daisy"]))
+                    print(RMSE)
                     
                     bande_crop(axs[i][j], name=p)
                     
-                    axs[i][j].set_title(p)
+                    axs[i][j].set_title(f"{p}, RMSE: {RMSE:.2f}")
                     axs[i][j].xaxis.set_major_locator(mticker.MaxNLocator(nbins=6))  # moins de ticks
                     axs[i][j].xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
                     axs[i][j].grid(True)
+                    
                     
                     if j==0:
                         j = 1
